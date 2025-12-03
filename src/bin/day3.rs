@@ -29,25 +29,87 @@ impl Joltage {
 	  }
        }
 }
+
+//the impl for part I
+//impl Joltage {
+//    fn choose(jolts: Vec<u64>) -> u64 {
+//       let vec1 = jolts;
+//       let mut maxnum = 0;
+//       let all = vec1.into_iter().combinations(2);
+//       let mut jolt1 = 0;
+//       let mut jolt2 = 0;
+//       for a in all {
+//          println!("this is a {:?}", &a);
+//          jolt1 = a[0];
+//	  jolt2 = a[1];
+//        let num = (jolt1 * 10) + jolt2;
+// 	  if num > maxnum {
+//	     maxnum = num;
+//	     }
+//	  }
+  //     maxnum
+    //   }
+//}
+
+//my working function for part II, works with example but is TOO SLOW for the query which is much larger
+//impl Joltage {
+//    fn choose(jolts: Vec<u64>) -> u64 {
+//       let vec1 = jolts;
+//       let mut maxnum = 0;
+//       let all = vec1.into_iter().combinations(12);
+//       for a in all {
+//	     let joined = Itertools::join(&mut a.iter(), "");
+//	     let upto12 = &joined[0..12];
+//	     let num = joined.parse::<u64>().unwrap();
+//	     if num > maxnum {
+//	         maxnum = num;
+//	         }
+//	     }
+  //     maxnum
+    //   }
+//}
+
+//AI assisted function
 impl Joltage {
     fn choose(jolts: Vec<u64>) -> u64 {
-       let vec1 = jolts;
-       let mut maxnum = 0;
-       let all = vec1.into_iter().combinations(2);
-       let mut jolt1 = 0;
-       let mut jolt2 = 0;
-       for a in all {
-          jolt1 = a[0];
-	  jolt2 = a[1];
-	  let num = (jolt1 * 10) + jolt2;
-	  if num > maxnum {
-	     maxnum = num;
-	     }
-	  }
-       maxnum
-       }
+        // We want a result of exactly 12 digits
+        let target_len = 12;
+        
+        // Calculate how many digits we are allowed to 'skip' or 'remove'
+        // to maximize the remaining ones.
+        let mut attempts_remaining = jolts.len().saturating_sub(target_len);
+        
+        let mut stack: Vec<u64> = Vec::with_capacity(target_len);
+
+        for &digit in &jolts {
+            // While the stack is not empty, 
+            // AND the current digit is bigger than the last kept digit,
+            // AND we can afford to remove more digits:
+            while let Some(&last) = stack.last() {
+                if digit > last && attempts_remaining > 0 {
+                    stack.pop();
+                    attempts_remaining -= 1;
+                } else {
+                    break;
+                }
+            }
+            stack.push(digit);
+        }
+
+        // If the digits were all descending (e.g. 98765...), we might not have 
+        // removed enough. We must truncate to exactly 12 digits.
+        stack.truncate(target_len);
+
+        // Convert the vector of digits back into a single u64
+        // (Assumes the result fits in u64, otherwise return String)
+        let result_str = stack.iter()
+            .map(|d| d.to_string())
+            .collect::<String>();
+            
+        result_str.parse::<u64>().unwrap()
+    }
 }
-       
+
 
 //read lines function is from the Rust book
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
