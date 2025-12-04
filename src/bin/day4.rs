@@ -34,7 +34,7 @@ impl Positions {
       }
 }
 impl Positions {
-   fn add(mut self) -> bool {
+   fn add(self) -> bool {
       let access = self.north + self.east + self.west + self.south + self.north_west + self.north_east + self.south_west + self.south_east;
       if access < 4 {
           return true;
@@ -57,6 +57,7 @@ fn main() {
     let mut dim_y = 0;
     let mut total_access = 0;
     let mut topvec: Vec<Vec<_>> = Vec::new();
+    //let mut topvec_new: Vec<Vec<_>> = Vec::new();
     if let Ok(lines) = read_lines("query_input_day4.txt") {
         for line in lines.map_while(Result::ok) {
               let inp: &str = line.trim();
@@ -72,42 +73,53 @@ fn main() {
 	      }
 	      
 	}
-   for j in 0..dim_y {
-      let mut n = 0;
-      let mut s = 0;
-      let mut w = 0;
-      let mut e = 0;
-      let mut nw = 0;
-      let mut ne = 0;
-      let mut se = 0;
-      let mut sw = 0;
-      for k in 0..dim_x {
-      if topvec[j][k] == 1 {
-      //for (k, element) in item.iter().enumerate() {
-          //println!("j {:?} k {:?} item {:?} element {:?}", &j, &k, &topvec[j], &topvec[j][k]);
-	  let positions = Positions::new();
-	  //println!("k is {:?} dim is {:?} j is {:?}", &k, &dim_x, &j);
-	  let w = if k < dim_x-1 { topvec[j][k+1] } else { 0 };
-	  let ne = if k < dim_x-1 && j.checked_sub(1).is_some() { topvec[j-1][k+1] } else { 0 };
-	  if k.checked_sub(1).is_some() {
-	      e = topvec[j][k.saturating_sub(1)];}
-	  if j.checked_sub(1).is_some() {
-	     n = topvec[j.saturating_sub(1)][k];}
-	  let s = if j < dim_y-1 { topvec[j+1][k] } else { 0 };
-	  let sw = if j < dim_y-1 && k.checked_sub(1).is_some() { topvec[j+1][k.saturating_sub(1)] } else { 0 };
-	  if j.checked_sub(1).is_some() && k.checked_sub(1).is_some() {
-	     nw = topvec[j.saturating_sub(1)][k.saturating_sub(1)];}
-	  let se = if j < dim_y-1  && k < dim_x-1 { topvec[j.saturating_add(1)][k + 1] } else { 0 };
-	  let test_positions = Positions { north: n, west: w, east: e, south: s, north_west: nw, north_east: ne, south_west: sw, south_east: se};
-	  let result = test_positions.add();
-	  //println!("test positions is {:?}", &test_positions);
-	  if result {
-	      //println!("can access");
-	      total_access+=1;
-              }
-          }
-      }
-      }
+   //part II - including prev_topvec and rolls_indices to hold the previous round of topvec and the indices of roll to be removed
+   let mut prev_topvec: Vec<Vec<_>> = Vec::new();
+   let mut rolls_indices: Vec<_> = Vec::new();
+   //part II checking the previous state does not equal current state - if so then stop
+   while prev_topvec != topvec {
+       for j in 0..dim_y {
+           let mut n = 0;
+           let mut s = 0;
+           let mut w = 0;
+           let mut e = 0;
+           let mut nw = 0;
+           let mut ne = 0;
+           let mut se = 0;
+           let mut sw = 0;
+	   prev_topvec = topvec.clone();
+           for k in 0..dim_x {
+               if topvec[j][k] == 1 {
+               //println!("j {:?} k {:?} item {:?} element {:?}", &j, &k, &topvec[j], &topvec[j][k]);
+	       let positions = Positions::new();
+	       //println!("k is {:?} dim is {:?} j is {:?}", &k, &dim_x, &j);
+	       let w = if k < dim_x-1 { topvec[j][k+1] } else { 0 };
+	       let ne = if k < dim_x-1 && j.checked_sub(1).is_some() { topvec[j-1][k+1] } else { 0 };
+	       if k.checked_sub(1).is_some() {
+	           e = topvec[j][k.saturating_sub(1)];}
+	       if j.checked_sub(1).is_some() {
+	          n = topvec[j.saturating_sub(1)][k];}
+	       let s = if j < dim_y-1 { topvec[j+1][k] } else { 0 };
+	       let sw = if j < dim_y-1 && k.checked_sub(1).is_some() { topvec[j+1][k.saturating_sub(1)] } else { 0 };
+	       if j.checked_sub(1).is_some() && k.checked_sub(1).is_some() {
+	          nw = topvec[j.saturating_sub(1)][k.saturating_sub(1)];}
+	       let se = if j < dim_y-1  && k < dim_x-1 { topvec[j+1][k + 1] } else { 0 };
+	       let test_positions = Positions { north: n, west: w, east: e, south: s, north_west: nw, north_east: ne, south_west: sw, south_east: se};
+	       let result = test_positions.add();
+	       //println!("test positions is {:?}", &test_positions);
+	       if result {
+	           total_access+=1;
+		   //part II using the indices to set those rolls to 0 if they've been accessed
+		   rolls_indices.push((j,k));
+                   }
+               }
+           }
+           }
+   for roll in &rolls_indices {
+       //part II reset to 0
+       topvec[roll.0][roll.1] = 0;
+       }
+   }
    println!("rolls is {:?}", &total_access);
 }
              
